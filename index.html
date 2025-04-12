@@ -8,14 +8,24 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f9f9fb;
+      background: #f9fafc;
+      color: #1a202c;
       padding: 2rem;
       max-width: 1300px;
       margin: auto;
-      color: #1a202c;
     }
-    h1, h2, h3 {
+    h1 {
+      text-align: center;
       color: #2b6cb0;
+      margin-bottom: 1rem;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      margin: 1rem 0 2rem 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
     .row {
       display: flex;
@@ -32,80 +42,82 @@
       border: none;
       border-radius: 10px;
     }
+    .card {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+    .card h3 {
+      margin-bottom: 0.8rem;
+      color: #2b6cb0;
+    }
+    .feature {
+      margin: 0.4rem 0;
+    }
+    .placeholder {
+      color: gray;
+      font-style: italic;
+    }
     .nav-btns {
       display: flex;
       justify-content: space-between;
       margin-top: 1rem;
     }
     .nav-btns button {
-      background-color: #2b6cb0;
+      background: #2b6cb0;
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
     }
     .nav-btns button:disabled {
-      background-color: #bbb;
+      background: #ccc;
       cursor: not-allowed;
-    }
-    .card {
-      background: #ffffff;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .feature-value {
-      font-weight: bold;
-      margin: 0.3rem 0;
-    }
-    .summary-img {
-      display: block;
-      margin: 3rem auto 1rem auto;
-      max-width: 100%;
-      border-radius: 10px;
     }
     .progress {
       text-align: center;
       font-weight: bold;
-      margin: 1rem 0;
+      margin-top: 1rem;
     }
     @media (max-width: 768px) {
-      .row {
-        flex-direction: column;
-      }
-      iframe {
-        height: 400px;
-      }
+      .row { flex-direction: column; }
+      iframe { height: 400px; }
     }
   </style>
 </head>
 <body>
   <h1>📊 TikTok Video Feature Dashboard</h1>
-
+  <input type="text" id="searchInput" placeholder="🔍 Search by author, description, or transcript..." />
   <div class="progress" id="progressCounter">Loading...</div>
   <div class="row" id="videoFeatureLayout">Loading viewer...</div>
 
-  <img src="summary_bottom_duration_stats.png" alt="Summary Duration and Engagement" class="summary-img" />
-
   <script>
-    let currentIndex = 0;
     let videoData = [];
+    let filteredData = [];
+    let currentIndex = 0;
 
     function extractVideoIdFromUrl(url) {
-      const match = url.match(/\/video\/(\d+)/);
+      const match = url.match(/\/video\/(\\d+)/);
       return match ? match[1] : null;
     }
 
+    function tf(val) {
+      return (val === "True" || val === true) ? "✔️ Yes" : "❌ No";
+    }
+
     function showVideo(index) {
-      const video = videoData[index];
+      const video = filteredData[index];
+      if (!video) return;
+
       const videoId = extractVideoIdFromUrl(video.tiktokurl || "");
       const layout = document.getElementById("videoFeatureLayout");
       const progress = document.getElementById("progressCounter");
 
-      progress.textContent = `Video ${index + 1} of ${videoData.length}`;
+      progress.textContent = `Video ${index + 1} of ${filteredData.length}`;
 
       layout.innerHTML = `
         <div class="video-column">
@@ -117,33 +129,52 @@
         </div>
         <div class="feature-column">
           <div class="card">
-            <h3>🕒 Temporal Dynamics</h3>
-            <div class="feature-value">Duration: ${video.duration_seconds_x || "N/A"} sec</div>
-            <div class="feature-value">Scene Cuts: ${video.scene_cut_count || "N/A"}</div>
-            <div class="feature-value">Frame Duration Mean: ${video.frame_duration_mean || "N/A"} ms</div>
+            <h3>🎞️ Temporal Dynamics</h3>
+            <div class="feature"><b>Duration:</b> ${video.duration_seconds_x || "N/A"} sec</div>
+            <div class="feature"><b>Scene Cuts:</b> ${video.scene_cut_count || "N/A"}</div>
+            <div class="feature"><b>Frame Mean:</b> ${video.frame_duration_mean || "N/A"} ms</div>
+            <div class="feature"><b>Min–Max:</b> ${video.frame_duration_min || "?"}–${video.frame_duration_max || "?"}</div>
           </div>
+
           <div class="card">
             <h3>🔊 Audio Complexity</h3>
-            <div class="feature-value">Music: ${video.has_music}</div>
-            <div class="feature-value">Speech: ${video.has_speech}</div>
+            <div class="feature"><b>Has Music:</b> ${tf(video.has_music)}</div>
+            <div class="feature"><b>Has Speech:</b> ${tf(video.has_speech)}</div>
           </div>
+
           <div class="card">
-            <h3>🎞 Motion Analysis</h3>
-            <div class="feature-value">Motion Intensity: ${video.avg_motion_magnitude || "N/A"}</div>
+            <h3>🌀 Motion Analysis</h3>
+            <div class="feature"><b>Avg Motion Magnitude:</b> ${video.avg_motion_magnitude || "N/A"}</div>
           </div>
+
+          <div class="card">
+            <h3>🧠 Multimodal Overload</h3>
+            <div class="feature"><b>Emoji Present:</b> ${tf(video.contains_emoji)}</div>
+            <div class="feature"><b>Animated Text Present:</b> ${tf(video.contains_text)}</div>
+          </div>
+
           <div class="card">
             <h3>📈 Engagement</h3>
-            <div class="feature-value">Likes: ${video.video_diggcount || "N/A"}</div>
-            <div class="feature-value">Shares: ${video.video_sharecount || "N/A"}</div>
-            <div class="feature-value">Comments: ${video.video_commentcount || "N/A"}</div>
-            <div class="feature-value">Plays: ${video.video_playcount || "N/A"}</div>
-            <div class="feature-value">Followers: ${video.author_followercount || "N/A"}</div>
+            <div class="feature"><b>Comments:</b> ${video.video_commentcount || "N/A"}</div>
+            <div class="feature"><b>Plays:</b> ${video.video_playcount || "N/A"}</div>
+            <div class="feature"><b>Followers:</b> ${video.author_followercount || "N/A"}</div>
           </div>
+
           <div class="card">
             <h3>📄 Transcript</h3>
-            <div style="white-space: pre-wrap; background: #edf2f7; padding: 1rem; border-radius: 5px;">
-              ${video.whisper_voice_to_text || "(No transcript available)"}
-            </div>
+            <div class="placeholder">${video.whisper_voice_to_text || "(none)"}</div>
+          </div>
+
+          <div class="card">
+            <h3>🚫 Explicit Content</h3>
+            <div class="placeholder">[To be classified using future LLM models]</div>
+          </div>
+
+          <div class="card">
+            <h3>🧠 Persuasive Messaging</h3>
+            <p style="font-size: 0.9rem; color: #444;"><i>Persuasive = emotionally charged or action-driven phrases (e.g. "Act now", "You’ll regret it")</i></p>
+            <div class="feature"><b>Detected:</b> ${tf(video.has_persuasive)}</div>
+            <div class="feature"><b>Description:</b> ${video.video_description_x || "(none)"}</div>
           </div>
         </div>
       `;
@@ -159,7 +190,7 @@
     }
 
     function goNext() {
-      if (currentIndex < videoData.length - 1) {
+      if (currentIndex < filteredData.length - 1) {
         currentIndex++;
         showVideo(currentIndex);
       }
@@ -167,7 +198,18 @@
 
     function updateButtons() {
       document.getElementById("prevBtn").disabled = currentIndex === 0;
-      document.getElementById("nextBtn").disabled = currentIndex === videoData.length - 1;
+      document.getElementById("nextBtn").disabled = currentIndex === filteredData.length - 1;
+    }
+
+    function applySearch() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      filteredData = videoData.filter(v =>
+        (v.author_name || "").toLowerCase().includes(query) ||
+        (v.video_description_x || "").toLowerCase().includes(query) ||
+        (v.whisper_voice_to_text || "").toLowerCase().includes(query)
+      );
+      currentIndex = 0;
+      showVideo(currentIndex);
     }
 
     window.onload = () => {
@@ -179,10 +221,13 @@
             skipEmptyLines: true,
             complete: results => {
               videoData = results.data;
+              filteredData = [...videoData];
               showVideo(currentIndex);
             }
           });
         });
+
+      document.getElementById("searchInput").addEventListener("input", applySearch);
     };
   </script>
 </body>
