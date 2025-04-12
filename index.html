@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mental Health Video Feature Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f9fb;
+      color: #2c3e50;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #1c3d5a;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      color: #5c6b73;
+    }
+
+    .video-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 30px;
+      border-left: 6px solid #4a90e2;
+    }
+
+    .video-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #1f2d3d;
+    }
+
+    video {
+      margin-top: 10px;
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .no-video {
+      color: #888;
+      font-style: italic;
+      margin-top: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      border: 1px solid #e0e6ed;
+    }
+
+    th {
+      background-color: #f0f5fa;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      background-color: #fff;
+    }
+
+    .pending {
+      color: #999;
+      font-style: italic;
+    }
+
+    .section-label {
+      margin-top: 25px;
+      font-weight: 600;
+      color: #4a90e2;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Mental Health Video Feature Dashboard</h1>
+  <p class="subtitle">Analyzing visual, audio, and behavioral patterns across TikTok videos submitted for mental health research. This dashboard displays current video-level features and includes placeholders for future analyses.</p>
+
+  <div id="dashboard">📥 Loading data from final_merged_with_audio.csv...</div>
+
+  <script>
+    const dashboard = document.getElementById("dashboard");
+
+    window.onload = function () {
+      fetch("final_merged_with_audio.csv")
+        .then(response => {
+          if (!response.ok) throw new Error("CSV file not found.");
+          return response.text();
+        })
+        .then(csv => {
+          Papa.parse(csv, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+              renderDashboard(results.data);
+            }
+          });
+        })
+        .catch(err => {
+          dashboard.innerHTML = `<p style="color:red;">❌ Error loading CSV: ${err.message}</p>`;
+        });
+    };
+
+    function renderDashboard(data) {
+      dashboard.innerHTML = "";
+      data.forEach(video => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+
+        const title = document.createElement("div");
+        title.className = "video-title";
+        title.textContent = video.video_filename || "Unnamed Video";
+        card.appendChild(title);
+
+        // Video preview
+        if (video.tiktokurl && video.tiktokurl.endsWith(".mp4")) {
+          const vid = document.createElement("video");
+          vid.setAttribute("controls", "true");
+          vid.setAttribute("src", video.tiktokurl);
+          card.appendChild(vid);
+        } else {
+          const noVid = document.createElement("div");
+          noVid.className = "no-video";
+          noVid.textContent = "🎬 Video preview not available";
+          card.appendChild(noVid);
+        }
+
+        // Feature table
+        const section = document.createElement("div");
+        section.className = "section-label";
+        section.textContent = "Extracted Features";
+        card.appendChild(section);
+
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>Feature</th><th>Value</th></tr>";
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+
+        for (const [key, value] of Object.entries(video)) {
+          if (key === "video_filename" || key === "tiktokurl") continue;
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${key}</td><td>${value}</td>`;
+          tbody.appendChild(row);
+        }
+
+        // Future feature placeholders
+        const futureFeatures = [
+          "adhd_score",
+          "scene_cut_frequency",
+          "emotional_valence",
+          "visual_overload_index",
+          "audio_entropy",
+        ];
+
+        futureFeatures.forEach(f => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${f}</td><td class='pending'>(to be added)</td>`;
+          tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        card.appendChild(table);
+
+        dashboard.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
