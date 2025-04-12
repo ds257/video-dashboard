@@ -2,107 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TikTok Video Feature Viewer for Mental Health Analysis</title>
+  <title>TikTok Video Feature Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f8fb;
-      color: #2c3e50;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
+      font-family: sans-serif;
+      background: #f8f9fa;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
     }
 
     h1 {
-      font-size: 1.8rem;
-      color: #2a4b7c;
-      margin-bottom: 20px;
       text-align: center;
+      color: #1e3a8a;
     }
 
-    .video-container {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      max-width: 800px;
+    iframe {
       width: 100%;
-      text-align: center;
-    }
-
-    video {
-      max-width: 100%;
-      border-radius: 8px;
-      margin: 20px 0;
-    }
-
-    .features {
-      text-align: left;
-      font-size: 0.95rem;
-      margin-top: 10px;
+      height: 600px;
+      border: none;
+      border-radius: 10px;
+      margin: 1rem 0;
     }
 
     .feature {
-      margin-bottom: 8px;
-    }
-
-    .feature b {
-      color: #2a4b7c;
+      margin: 0.4rem 0;
     }
 
     .placeholder {
+      color: gray;
       font-style: italic;
-      color: #999;
     }
 
-    .nav-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin: 30px 0 10px;
+    .controls {
+      text-align: center;
+      margin-top: 2rem;
     }
 
-    .nav-buttons button {
-      background: #2a4b7c;
+    button {
+      background-color: #1e3a8a;
       color: white;
-      padding: 10px 16px;
       border: none;
-      border-radius: 6px;
-      font-weight: bold;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border-radius: 5px;
       cursor: pointer;
     }
 
-    .nav-buttons button:disabled {
-      background: #ccc;
+    button:disabled {
+      background-color: #bbb;
       cursor: not-allowed;
     }
 
     .progress {
-      margin-bottom: 12px;
-      font-weight: 500;
-      color: #444;
-    }
-
-    .fallback-btn {
-      background: #ff5c5c;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      margin: 15px 0;
-      cursor: pointer;
-      font-weight: bold;
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>📊 TikTok Video Feature Viewer for Mental Health Analysis</h1>
+  <h1>📊 TikTok Video Feature Viewer</h1>
   <div class="progress" id="progressCounter">Loading...</div>
-  <div id="videoViewer" class="video-container">Preparing viewer...</div>
-  <div class="nav-buttons">
+  <div id="videoContainer">Preparing viewer...</div>
+
+  <div class="controls">
     <button id="prevBtn">Previous</button>
     <button id="nextBtn">Next</button>
   </div>
@@ -110,7 +76,59 @@
   <script>
     let currentIndex = 0;
     let videoData = [];
-    const videoFolder = "videos_by_DATE";
+
+    function extractVideoIdFromUrl(url) {
+      const match = url.match(/\/video\/(\d+)/);
+      return match ? match[1] : null;
+    }
+
+    function showVideo(index) {
+      const container = document.getElementById("videoContainer");
+      const progress = document.getElementById("progressCounter");
+      const video = videoData[index];
+      const videoId = extractVideoIdFromUrl(video.tiktokurl || "");
+
+      progress.textContent = `Video ${index + 1} of ${videoData.length}`;
+
+      if (!videoId) {
+        container.innerHTML = `<p class="placeholder">Invalid TikTok URL</p>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
+
+        <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
+        <div class="feature"><b>Duration (sec):</b> ${video.duration_seconds_x || "-"}</div>
+        <div class="feature"><b>Has Music:</b> ${video.has_music || "-"}</div>
+        <div class="feature"><b>Has Speech:</b> ${video.has_speech || "-"}</div>
+        <div class="feature"><b>Has Persuasive Language:</b> ${video.has_persuasive || "-"}</div>
+        <div class="feature"><b>Scene Cut Frequency:</b> <span class="placeholder">(to be added)</span></div>
+        <div class="feature"><b>Motion Intensity:</b> <span class="placeholder">(to be added)</span></div>
+        <div class="feature"><b>Audio Volume Range:</b> <span class="placeholder">(to be added)</span></div>
+      `;
+    }
+
+    function updateButtons() {
+      document.getElementById("prevBtn").disabled = currentIndex === 0;
+      document.getElementById("nextBtn").disabled = currentIndex === videoData.length - 1;
+    }
+
+    document.getElementById("prevBtn").onclick = () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showVideo(currentIndex);
+        updateButtons();
+      }
+    };
+
+    document.getElementById("nextBtn").onclick = () => {
+      if (currentIndex < videoData.length - 1) {
+        currentIndex++;
+        showVideo(currentIndex);
+        updateButtons();
+      }
+    };
 
     window.onload = () => {
       fetch("final_merged_with_audio.csv")
@@ -127,95 +145,6 @@
           });
         });
     };
-
-    function getLocalVideoPath(videoId) {
-      // Search through hardcoded filenames for a match
-      const knownFilenames = [
-        "@atomic_dane_video_7353051917129370923.mp4",
-        "@barbiesclutch_video_7353051820677156126.mp4",
-        "@brianfrange_video_7353052136202079530.mp4",
-        "@cheaptravelandnews_video_7353052668710931754.mp4",
-        "@dailyinuyasha_video_7353052232851541279.mp4",
-        "@dees_kustom_tees_video_7353052462183550254.mp4",
-        "@ed1971547_video_7353052116849593643.mp4",
-        "@gatiss234_video_7353051860728565034.mp4",
-        "@graciebirkphoto_video_7353052306167893278.mp4",
-        "@islamic__way18_video_7353051738112412974.mp4",
-        "@luluscloud3_video_7353051750653250859.mp4",
-        "@mediumcarlablaha_video_7353052490889219370.mp4",
-        "@new_usa_2024_video_7353051840424103214.mp4",
-        "@nonna.knows_video_7353051747088157982.mp4",
-        "@photoshopsurgeonofficial_video_7353051982279576875.mp4",
-        "@pjaegaming_video_7353052558224526635.mp4",
-        "@red.blue_robie39_video_7353052154078219563.mp4",
-        "@robbiesee33_video_7353052410530581803.mp4",
-        "@stayinganti__video_7353052035056536875.mp4",
-        "@vegasdon47_video_7353051942530141470.mp4",
-        "@xxx.purechildxxx__video_7353052256767429930.mp4"
-      ];
-
-      const match = knownFilenames.find(name => name.includes(videoId));
-      return match ? `${videoFolder}/${match}` : null;
-    }
-
-    function showVideo(index) {
-      const container = document.getElementById("videoViewer");
-      const counter = document.getElementById("progressCounter");
-      const video = videoData[index];
-      const videoId = video.video_id || "";
-      const tiktokUrl = video.tiktokurl || "#";
-      const localPath = getLocalVideoPath(videoId);
-
-      counter.textContent = `Video ${index + 1} of ${videoData.length}`;
-
-      container.innerHTML = `
-        <h2>Video ID: ${videoId}</h2>
-
-        ${localPath ? `
-          <video controls onerror="this.style.display='none'; document.getElementById('fallbackBtn${index}').style.display='inline-block';">
-            <source src="${localPath}" type="video/mp4" />
-          </video>
-        ` : `
-          <p class="placeholder">Local video not found for this ID.</p>
-        `}
-
-        <button id="fallbackBtn${index}" class="fallback-btn" style="display:${localPath ? 'none' : 'inline-block'};" onclick="window.open('${tiktokUrl}', '_blank')">
-          🔗 Open on TikTok
-        </button>
-
-        <div class="features">
-          <div class="feature"><b>Total Duration:</b> ${video.duration_seconds_x || "-"} sec</div>
-          <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
-          <div class="feature"><b>Has Music:</b> ${video.has_music || "-"}</div>
-          <div class="feature"><b>Has Speech:</b> ${video.has_speech || "-"}</div>
-          <div class="feature"><b>Has Persuasive Language:</b> ${video.has_persuasive || "-"}</div>
-          <div class="feature"><b>Scene Cut Frequency:</b> <span class="placeholder">(to be added)</span></div>
-          <div class="feature"><b>Motion Intensity:</b> <span class="placeholder">(to be added)</span></div>
-          <div class="feature"><b>Audio Volume Range:</b> <span class="placeholder">(to be added)</span></div>
-        </div>
-      `;
-    }
-
-    function updateButtons() {
-      document.getElementById("prevBtn").disabled = currentIndex === 0;
-      document.getElementById("nextBtn").disabled = currentIndex === videoData.length - 1;
-    }
-
-    document.getElementById("prevBtn").addEventListener("click", () => {
-      if (currentIndex > 0) {
-        currentIndex--;
-        showVideo(currentIndex);
-        updateButtons();
-      }
-    });
-
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      if (currentIndex < videoData.length - 1) {
-        currentIndex++;
-        showVideo(currentIndex);
-        updateButtons();
-      }
-    });
   </script>
 </body>
 </html>
