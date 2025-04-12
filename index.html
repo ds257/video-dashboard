@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Feature Viewer</title>
+  <title>TikTok Video Feature Viewer for Mental Health Analysis</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f6f9fc;
-      color: #333;
+      background: #f5f8fb;
+      color: #2c3e50;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -19,24 +19,24 @@
     h1 {
       font-size: 1.8rem;
       color: #2a4b7c;
-      margin-bottom: 10px;
-    }
-
-    .video-container {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      max-width: 720px;
-      width: 100%;
       margin-bottom: 20px;
       text-align: center;
     }
 
-    video {
+    .video-container {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+    }
+
+    video, img.thumbnail {
       max-width: 100%;
       border-radius: 8px;
-      margin: 15px 0;
+      margin: 20px 0;
     }
 
     .features {
@@ -46,7 +46,7 @@
     }
 
     .feature {
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .feature b {
@@ -61,8 +61,8 @@
     .nav-buttons {
       display: flex;
       justify-content: center;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 16px;
+      margin: 30px 0 10px;
     }
 
     .nav-buttons button {
@@ -71,6 +71,7 @@
       padding: 10px 16px;
       border: none;
       border-radius: 6px;
+      font-weight: bold;
       cursor: pointer;
     }
 
@@ -78,11 +79,18 @@
       background: #ccc;
       cursor: not-allowed;
     }
+
+    .progress {
+      margin-bottom: 12px;
+      font-weight: 500;
+      color: #444;
+    }
   </style>
 </head>
 <body>
-  <h1>🧠 Mental Health Video Viewer</h1>
-  <div id="videoViewer" class="video-container">Loading...</div>
+  <h1>📊 TikTok Video Feature Viewer for Mental Health Analysis</h1>
+  <div class="progress" id="progressCounter">Loading...</div>
+  <div id="videoViewer" class="video-container">Preparing viewer...</div>
   <div class="nav-buttons">
     <button id="prevBtn">Previous</button>
     <button id="nextBtn">Next</button>
@@ -91,6 +99,9 @@
   <script>
     let currentIndex = 0;
     let videoData = [];
+
+    const videoFolder = "videos_by_date";
+    const fallbackThumbnail = `${videoFolder}/fallback_thumbnail.jpg`; // Add this file to your repo
 
     window.onload = () => {
       fetch("final_merged_with_audio.csv")
@@ -110,24 +121,30 @@
 
     function showVideo(index) {
       const container = document.getElementById("videoViewer");
+      const counter = document.getElementById("progressCounter");
       const video = videoData[index];
+      const filename = video.video_filename || "Unknown.mp4";
+
+      counter.textContent = `Video ${index + 1} of ${videoData.length}`;
+      const localVideoPath = `${videoFolder}/${filename}`;
 
       container.innerHTML = `
-        <h2>${video.video_filename || "Untitled Video"}</h2>
-        ${video.tiktokurl && video.tiktokurl.endsWith(".mp4")
-          ? `<video controls src="${video.tiktokurl}"></video>`
-          : `<p class="placeholder">No video preview available.</p>`
-        }
+        <h2>${filename}</h2>
+        <video controls onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <source src="${localVideoPath}" type="video/mp4" />
+          Your browser does not support video playback.
+        </video>
+        <img class="thumbnail" src="${fallbackThumbnail}" alt="Video not available" style="display: none;" />
 
         <div class="features">
+          <div class="feature"><b>Total Duration:</b> ${video.duration_seconds_x || "-"} sec</div>
           <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
           <div class="feature"><b>Has Music:</b> ${video.has_music || "-"}</div>
           <div class="feature"><b>Has Speech:</b> ${video.has_speech || "-"}</div>
-          <div class="feature"><b>Has Persuasive Content:</b> ${video.has_persuasive || "-"}</div>
-
-          <!-- Placeholders -->
-          <div class="feature"><b>ADHD Score:</b> <span class="placeholder">(to be added)</span></div>
-          <div class="feature"><b>Emotion Category:</b> <span class="placeholder">(to be added)</span></div>
+          <div class="feature"><b>Has Persuasive Language:</b> ${video.has_persuasive || "-"}</div>
+          <div class="feature"><b>Scene Cut Frequency:</b> <span class="placeholder">(to be added)</span></div>
+          <div class="feature"><b>Motion Intensity:</b> <span class="placeholder">(to be added)</span></div>
+          <div class="feature"><b>Audio Volume Range:</b> <span class="placeholder">(to be added)</span></div>
         </div>
       `;
     }
