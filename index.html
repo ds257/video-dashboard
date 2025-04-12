@@ -39,20 +39,15 @@
       border-radius: 10px;
     }
 
+    .feature {
+      margin: 0.4rem 0;
+    }
+
     h3 {
       margin-top: 1.5rem;
       color: #1e3a8a;
       border-bottom: 1px solid #ccc;
       padding-bottom: 0.3rem;
-    }
-
-    .feature {
-      margin: 0.4rem 0;
-    }
-
-    .placeholder {
-      color: gray;
-      font-style: italic;
     }
 
     .text-block {
@@ -85,23 +80,23 @@
       cursor: pointer;
     }
 
-    .controls {
-      text-align: center;
-      margin-top: 2rem;
+    .nav-btns {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
     }
 
-    .controls button {
+    .nav-btns button {
       background-color: #1e3a8a;
       color: white;
       border: none;
       padding: 10px 20px;
-      margin: 0 10px;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .controls button:disabled {
+    .nav-btns button:disabled {
       background-color: #bbb;
       cursor: not-allowed;
     }
@@ -124,6 +119,11 @@
       iframe {
         height: 400px;
       }
+
+      .nav-btns {
+        flex-direction: column;
+        gap: 1rem;
+      }
     }
   </style>
 </head>
@@ -132,11 +132,6 @@
   <div class="progress" id="progressCounter">Loading...</div>
 
   <div class="row" id="videoFeatureLayout">Loading viewer...</div>
-
-  <div class="controls">
-    <button id="prevBtn">Previous</button>
-    <button id="nextBtn">Next</button>
-  </div>
 
   <script>
     let currentIndex = 0;
@@ -163,6 +158,12 @@
       layout.innerHTML = `
         <div class="video-column">
           <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
+
+          <div class="nav-btns">
+            <button onclick="goPrev()" id="prevBtn">⬅️ Previous</button>
+            <button onclick="goNext()" id="nextBtn">Next ➡️</button>
+          </div>
+
           <div class="note-section">
             <textarea id="noteInput" placeholder="📝 Notes for this video..."></textarea>
             <button onclick="downloadNote('${videoId}')">💾 Download Note</button>
@@ -170,33 +171,57 @@
         </div>
 
         <div class="feature-column">
-          <h3>🕒 Temporal</h3>
+          <h3>🕒 Temporal Dynamics</h3>
           <div class="feature"><b>Timestamp:</b> ${video.video_timestamp || "-"}</div>
           <div class="feature"><b>Duration:</b> ${video.duration_seconds_x || "-"} sec</div>
           <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
-          <div class="feature"><b>Location:</b> ${video.video_locationcreated || "-"}</div>
+          <div class="feature"><b>Scene Cuts:</b> ${video.scene_cut_count || "-"}</div>
+          <div class="feature"><b>Frame Duration (mean/std/min/max):</b><br/>
+            ${video.frame_duration_mean || "-"} / ${video.frame_duration_std || "-"} / ${video.frame_duration_min || "-"} / ${video.frame_duration_max || "-"}</div>
 
-          <h3>🔊 Audio</h3>
+          <h3>🔊 Audio Complexity</h3>
           <div class="feature"><b>Has Music:</b> ${video.has_music}</div>
           <div class="feature"><b>Has Speech:</b> ${video.has_speech}</div>
+
+          <h3>🎞️ Motion Analysis</h3>
+          <div class="feature"><b>Avg Motion Magnitude:</b> ${video.avg_motion_magnitude || "-"}</div>
 
           <h3>📈 Engagement</h3>
           <div class="feature"><b>Likes:</b> ${video.like_count || video.video_diggcount || "-"}</div>
           <div class="feature"><b>Shares:</b> ${video.video_sharecount || "-"}</div>
           <div class="feature"><b>Comments:</b> ${video.video_commentcount || "-"}</div>
-          <div class="feature"><b>Plays:</b> ${video.video_playcount || "-"}</div>
           <div class="feature"><b>Followers:</b> ${video.author_followercount || "-"}</div>
         </div>
 
         <div class="bottom-section">
-          <h3>🧠 Persuasive Messaging</h3>
-          <div class="feature"><b>Persuasive Language:</b> ${video.has_persuasive}</div>
           <h3>📄 Description</h3>
           <div class="text-block">${video.video_description_x || "(none)"}</div>
+
           <h3>🗣️ Transcript</h3>
           <div class="text-block">${video.whisper_voice_to_text || "(none)"}</div>
         </div>
       `;
+
+      updateButtons();
+    }
+
+    function goPrev() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showVideo(currentIndex);
+      }
+    }
+
+    function goNext() {
+      if (currentIndex < videoData.length - 1) {
+        currentIndex++;
+        showVideo(currentIndex);
+      }
+    }
+
+    function updateButtons() {
+      document.getElementById("prevBtn").disabled = currentIndex === 0;
+      document.getElementById("nextBtn").disabled = currentIndex === videoData.length - 1;
     }
 
     function downloadNote(videoId) {
@@ -210,29 +235,8 @@
       URL.revokeObjectURL(url);
     }
 
-    function updateButtons() {
-      document.getElementById("prevBtn").disabled = currentIndex === 0;
-      document.getElementById("nextBtn").disabled = currentIndex === videoData.length - 1;
-    }
-
-    document.getElementById("prevBtn").onclick = () => {
-      if (currentIndex > 0) {
-        currentIndex--;
-        showVideo(currentIndex);
-        updateButtons();
-      }
-    };
-
-    document.getElementById("nextBtn").onclick = () => {
-      if (currentIndex < videoData.length - 1) {
-        currentIndex++;
-        showVideo(currentIndex);
-        updateButtons();
-      }
-    };
-
     window.onload = () => {
-      fetch("final_merged_with_audio.csv")
+      fetch("final_with_motion_features.csv")
         .then(res => res.text())
         .then(csv => {
           Papa.parse(csv, {
@@ -241,7 +245,6 @@
             complete: results => {
               videoData = results.data;
               showVideo(currentIndex);
-              updateButtons();
             }
           });
         });
