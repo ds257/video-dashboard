@@ -10,7 +10,7 @@
       font-family: 'Segoe UI', sans-serif;
       background: #f5f8fb;
       padding: 2rem;
-      max-width: 900px;
+      max-width: 1200px;
       margin: auto;
       color: #2c3e50;
     }
@@ -21,12 +21,22 @@
       margin-bottom: 2rem;
     }
 
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .video-column, .feature-column {
+      flex: 1 1 45%;
+      min-width: 300px;
+    }
+
     iframe {
       width: 100%;
-      height: 600px;
+      height: 500px;
       border: none;
       border-radius: 10px;
-      margin-bottom: 1.5rem;
     }
 
     h3 {
@@ -45,12 +55,42 @@
       font-style: italic;
     }
 
+    .text-block {
+      background: #f0f4f8;
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    .note-section {
+      margin-top: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 1rem;
+    }
+
+    .note-section button {
+      margin-top: 0.5rem;
+      background-color: #1e3a8a;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
     .controls {
       text-align: center;
       margin-top: 2rem;
     }
 
-    button {
+    .controls button {
       background-color: #1e3a8a;
       color: white;
       border: none;
@@ -61,7 +101,7 @@
       cursor: pointer;
     }
 
-    button:disabled {
+    .controls button:disabled {
       background-color: #bbb;
       cursor: not-allowed;
     }
@@ -72,23 +112,26 @@
       margin-bottom: 1rem;
     }
 
-    .section {
-      margin-bottom: 1.5rem;
+    .bottom-section {
+      margin-top: 2rem;
     }
 
-    .text {
-      background: #f0f4f8;
-      padding: 0.5rem;
-      border-radius: 5px;
-      font-family: monospace;
-      white-space: pre-wrap;
+    @media (max-width: 768px) {
+      .row {
+        flex-direction: column;
+      }
+
+      iframe {
+        height: 400px;
+      }
     }
   </style>
 </head>
 <body>
   <h1>📊 TikTok Video Feature Dashboard</h1>
   <div class="progress" id="progressCounter">Loading...</div>
-  <div id="videoContainer">Preparing viewer...</div>
+
+  <div class="row" id="videoFeatureLayout">Loading viewer...</div>
 
   <div class="controls">
     <button id="prevBtn">Previous</button>
@@ -105,58 +148,66 @@
     }
 
     function showVideo(index) {
-      const container = document.getElementById("videoContainer");
-      const progress = document.getElementById("progressCounter");
       const video = videoData[index];
       const videoId = extractVideoIdFromUrl(video.tiktokurl || "");
+      const layout = document.getElementById("videoFeatureLayout");
+      const progress = document.getElementById("progressCounter");
 
       progress.textContent = `Video ${index + 1} of ${videoData.length}`;
 
       if (!videoId) {
-        container.innerHTML = `<p class="placeholder">Invalid TikTok URL</p>`;
+        layout.innerHTML = `<p class="placeholder">Invalid TikTok URL</p>`;
         return;
       }
 
-      container.innerHTML = `
-        <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
+      layout.innerHTML = `
+        <div class="video-column">
+          <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
+          <div class="note-section">
+            <textarea id="noteInput" placeholder="📝 Notes for this video..."></textarea>
+            <button onclick="downloadNote('${videoId}')">💾 Download Note</button>
+          </div>
+        </div>
 
-        <div class="section">
-          <h3>🕒 Temporal Dynamics</h3>
-          <div class="feature"><b>Video Timestamp:</b> ${video.video_timestamp || "-"}</div>
-          <div class="feature"><b>Duration (sec):</b> ${video.duration_seconds_x || "-"}</div>
+        <div class="feature-column">
+          <h3>🕒 Temporal</h3>
+          <div class="feature"><b>Timestamp:</b> ${video.video_timestamp || "-"}</div>
+          <div class="feature"><b>Duration:</b> ${video.duration_seconds_x || "-"} sec</div>
           <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
           <div class="feature"><b>Location:</b> ${video.video_locationcreated || "-"}</div>
-        </div>
 
-        <div class="section">
-          <h3>🔊 Audio Complexity</h3>
-          <div class="feature"><b>Has Music:</b> ${video.has_music || "-"}</div>
-          <div class="feature"><b>Has Speech:</b> ${video.has_speech || "-"}</div>
-          <div class="feature"><b>Speech Transcript:</b></div>
-          <div class="text">${video.whisper_voice_to_text || "(none)"}</div>
-        </div>
+          <h3>🔊 Audio</h3>
+          <div class="feature"><b>Has Music:</b> ${video.has_music}</div>
+          <div class="feature"><b>Has Speech:</b> ${video.has_speech}</div>
 
-        <div class="section">
-          <h3>🎞️ Motion Analysis</h3>
-          <div class="feature"><b>Motion Vectors / Intensity:</b> <span class="placeholder">(to be added)</span></div>
-        </div>
-
-        <div class="section">
-          <h3>🧠 Persuasive Messaging</h3>
-          <div class="feature"><b>Has Persuasive Language:</b> ${video.has_persuasive || "-"}</div>
-          <div class="feature"><b>Video Description:</b></div>
-          <div class="text">${video.video_description_x || "(none)"}</div>
-        </div>
-
-        <div class="section">
-          <h3>📈 Engagement Metrics</h3>
+          <h3>📈 Engagement</h3>
           <div class="feature"><b>Likes:</b> ${video.like_count || video.video_diggcount || "-"}</div>
           <div class="feature"><b>Shares:</b> ${video.video_sharecount || "-"}</div>
           <div class="feature"><b>Comments:</b> ${video.video_commentcount || "-"}</div>
           <div class="feature"><b>Plays:</b> ${video.video_playcount || "-"}</div>
-          <div class="feature"><b>Followers (Author):</b> ${video.author_followercount || "-"}</div>
+          <div class="feature"><b>Followers:</b> ${video.author_followercount || "-"}</div>
+        </div>
+
+        <div class="bottom-section">
+          <h3>🧠 Persuasive Messaging</h3>
+          <div class="feature"><b>Persuasive Language:</b> ${video.has_persuasive}</div>
+          <h3>📄 Description</h3>
+          <div class="text-block">${video.video_description_x || "(none)"}</div>
+          <h3>🗣️ Transcript</h3>
+          <div class="text-block">${video.whisper_voice_to_text || "(none)"}</div>
         </div>
       `;
+    }
+
+    function downloadNote(videoId) {
+      const note = document.getElementById("noteInput").value;
+      const blob = new Blob([note], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `note_${videoId}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     function updateButtons() {
