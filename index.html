@@ -101,8 +101,8 @@
     let currentIndex = 0;
 
     function extractVideoIdFromUrl(url) {
-  const match = url.match(/\/video\/(\d+)/);
-  return match ? match[1] : null;
+      const match = url.match(/\/video\/(\d+)/);
+      return match ? match[1] : null;
     }
 
     function tf(val) {
@@ -140,17 +140,16 @@
             <h3>🔊 Audio Complexity</h3>
             <div class="feature"><b>Has Music:</b> ${tf(video.has_music)}</div>
             <div class="feature"><b>Has Speech:</b> ${tf(video.has_speech)}</div>
-          </div>
-
-          <div class="card">
-            <h3>🌀 Motion Analysis</h3>
-            <div class="feature"><b>Avg Motion Magnitude:</b> ${video.avg_motion_magnitude || "N/A"}</div>
+            <div class="feature"><b>Volume Mean:</b> ${video.volume_mean || "N/A"}</div>
+            <div class="feature"><b>Volume Std:</b> ${video.volume_std || "N/A"}</div>
+            <div class="feature"><b>Volume Range:</b> ${video.volume_min || "?"}–${video.volume_max || "?"}</div>
           </div>
 
           <div class="card">
             <h3>🧠 Multimodal Overload</h3>
             <div class="feature"><b>Emoji Present:</b> ${tf(video.contains_emoji)}</div>
             <div class="feature"><b>Animated Text Present:</b> ${tf(video.contains_text)}</div>
+            <div class="feature"><b>Multimodal Score:</b> ${video.multimodal_score || "N/A"} <small>(0–1 overload scale)</small></div>
           </div>
 
           <div class="card">
@@ -161,6 +160,18 @@
           </div>
 
           <div class="card">
+            <h3>💬 Persuasive Messaging</h3>
+            <p style="font-size: 0.9rem; color: #444;">
+              <i>
+                Persuasive = emotionally charged or action-driven language (e.g., "Act now", "Vote", "You’ll regret it").
+                Detected via keyword search in transcript and description.
+              </i>
+            </p>
+            <div class="feature"><b>Detected:</b> ${tf(video.has_persuasive)}</div>
+            <div class="feature"><b>Description:</b> ${video.video_description_x || "(none)"}</div>
+          </div>
+
+          <div class="card">
             <h3>📄 Transcript</h3>
             <div class="placeholder">${video.whisper_voice_to_text || "(none)"}</div>
           </div>
@@ -168,13 +179,6 @@
           <div class="card">
             <h3>🚫 Explicit Content</h3>
             <div class="placeholder">[To be classified using future LLM models]</div>
-          </div>
-
-          <div class="card">
-            <h3>🧠 Persuasive Messaging</h3>
-            <p style="font-size: 0.9rem; color: #444;"><i>Persuasive = emotionally charged or action-driven phrases (e.g. "Act now", "You’ll regret it")</i></p>
-            <div class="feature"><b>Detected:</b> ${tf(video.has_persuasive)}</div>
-            <div class="feature"><b>Description:</b> ${video.video_description_x || "(none)"}</div>
           </div>
         </div>
       `;
