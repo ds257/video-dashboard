@@ -33,7 +33,7 @@
       text-align: center;
     }
 
-    video, img.thumbnail {
+    video {
       max-width: 100%;
       border-radius: 8px;
       margin: 20px 0;
@@ -85,6 +85,17 @@
       font-weight: 500;
       color: #444;
     }
+
+    .fallback-btn {
+      background: #ff5c5c;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      margin: 15px 0;
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -99,9 +110,7 @@
   <script>
     let currentIndex = 0;
     let videoData = [];
-
-    const videoFolder = "videos_by_date";
-    const fallbackThumbnail = `${videoFolder}/fallback_thumbnail.jpg`; // Add this file to your repo
+    const videoFolder = "videos_by_DATE";
 
     window.onload = () => {
       fetch("final_merged_with_audio.csv")
@@ -119,22 +128,60 @@
         });
     };
 
+    function getLocalVideoPath(videoId) {
+      // Search through hardcoded filenames for a match
+      const knownFilenames = [
+        "@atomic_dane_video_7353051917129370923.mp4",
+        "@barbiesclutch_video_7353051820677156126.mp4",
+        "@brianfrange_video_7353052136202079530.mp4",
+        "@cheaptravelandnews_video_7353052668710931754.mp4",
+        "@dailyinuyasha_video_7353052232851541279.mp4",
+        "@dees_kustom_tees_video_7353052462183550254.mp4",
+        "@ed1971547_video_7353052116849593643.mp4",
+        "@gatiss234_video_7353051860728565034.mp4",
+        "@graciebirkphoto_video_7353052306167893278.mp4",
+        "@islamic__way18_video_7353051738112412974.mp4",
+        "@luluscloud3_video_7353051750653250859.mp4",
+        "@mediumcarlablaha_video_7353052490889219370.mp4",
+        "@new_usa_2024_video_7353051840424103214.mp4",
+        "@nonna.knows_video_7353051747088157982.mp4",
+        "@photoshopsurgeonofficial_video_7353051982279576875.mp4",
+        "@pjaegaming_video_7353052558224526635.mp4",
+        "@red.blue_robie39_video_7353052154078219563.mp4",
+        "@robbiesee33_video_7353052410530581803.mp4",
+        "@stayinganti__video_7353052035056536875.mp4",
+        "@vegasdon47_video_7353051942530141470.mp4",
+        "@xxx.purechildxxx__video_7353052256767429930.mp4"
+      ];
+
+      const match = knownFilenames.find(name => name.includes(videoId));
+      return match ? `${videoFolder}/${match}` : null;
+    }
+
     function showVideo(index) {
       const container = document.getElementById("videoViewer");
       const counter = document.getElementById("progressCounter");
       const video = videoData[index];
-      const filename = video.video_filename || "Unknown.mp4";
+      const videoId = video.video_id || "";
+      const tiktokUrl = video.tiktokurl || "#";
+      const localPath = getLocalVideoPath(videoId);
 
       counter.textContent = `Video ${index + 1} of ${videoData.length}`;
-      const localVideoPath = `${videoFolder}/${filename}`;
 
       container.innerHTML = `
-        <h2>${filename}</h2>
-        <video controls onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-          <source src="${localVideoPath}" type="video/mp4" />
-          Your browser does not support video playback.
-        </video>
-        <img class="thumbnail" src="${fallbackThumbnail}" alt="Video not available" style="display: none;" />
+        <h2>Video ID: ${videoId}</h2>
+
+        ${localPath ? `
+          <video controls onerror="this.style.display='none'; document.getElementById('fallbackBtn${index}').style.display='inline-block';">
+            <source src="${localPath}" type="video/mp4" />
+          </video>
+        ` : `
+          <p class="placeholder">Local video not found for this ID.</p>
+        `}
+
+        <button id="fallbackBtn${index}" class="fallback-btn" style="display:${localPath ? 'none' : 'inline-block'};" onclick="window.open('${tiktokUrl}', '_blank')">
+          🔗 Open on TikTok
+        </button>
 
         <div class="features">
           <div class="feature"><b>Total Duration:</b> ${video.duration_seconds_x || "-"} sec</div>
