@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TikTok Video Feature Dashboard</title>
+  <title>Medical TikTok Feature Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f5f8fb;
+      background: #f9fafc;
       padding: 2rem;
-      max-width: 1200px;
+      max-width: 1300px;
       margin: auto;
-      color: #2c3e50;
+      color: #1a202c;
     }
 
     h1 {
       text-align: center;
-      color: #1e3a8a;
+      color: #2c5282;
       margin-bottom: 2rem;
     }
 
@@ -39,55 +39,14 @@
       border-radius: 10px;
     }
 
-    .feature {
-      margin: 0.4rem 0;
-    }
-
-    h3 {
-      margin-top: 1.5rem;
-      color: #1e3a8a;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 0.3rem;
-    }
-
-    .text-block {
-      background: #f0f4f8;
-      padding: 0.6rem;
-      border-radius: 6px;
-      font-family: monospace;
-      white-space: pre-wrap;
-    }
-
-    .note-section {
-      margin-top: 1rem;
-    }
-
-    textarea {
-      width: 100%;
-      height: 80px;
-      border-radius: 6px;
-      padding: 8px;
-      font-size: 1rem;
-    }
-
-    .note-section button {
-      margin-top: 0.5rem;
-      background-color: #1e3a8a;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
     .nav-btns {
-      margin-top: 1rem;
       display: flex;
       justify-content: space-between;
+      margin: 1rem 0;
     }
 
     .nav-btns button {
-      background-color: #1e3a8a;
+      background-color: #2c5282;
       color: white;
       border: none;
       padding: 10px 20px;
@@ -101,25 +60,99 @@
       cursor: not-allowed;
     }
 
+    .card {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      margin-bottom: 0.5rem;
+      color: #2c5282;
+    }
+
+    .feature-value {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0.3rem 0;
+    }
+
+    .bar-container {
+      width: 100%;
+      background: #e2e8f0;
+      border-radius: 10px;
+      height: 16px;
+      margin-top: 0.3rem;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #63b3ed;
+      transition: width 0.3s;
+    }
+
+    .bar-fill.red {
+      background: #f56565;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e2e8f0;
+      color: #2d3748;
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      margin-right: 0.3rem;
+    }
+
+    .tag.overload {
+      background: #feb2b2;
+      color: #742a2a;
+      font-weight: bold;
+    }
+
+    .tag.no-overload {
+      background: #c6f6d5;
+      color: #22543d;
+      font-weight: bold;
+    }
+
+    .tooltip {
+      position: relative;
+      border-bottom: 1px dotted #999;
+      cursor: help;
+    }
+
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: 125%;
+      left: 0;
+      background: #2d3748;
+      color: white;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      border-radius: 5px;
+      white-space: normal;
+      width: 250px;
+      z-index: 10;
+    }
+
     .progress {
       text-align: center;
       font-weight: 600;
       margin-bottom: 1rem;
     }
 
-    .bottom-section {
-      margin-top: 2rem;
-    }
-
     @media (max-width: 768px) {
       .row {
         flex-direction: column;
       }
-
       iframe {
         height: 400px;
       }
-
       .nav-btns {
         flex-direction: column;
         gap: 1rem;
@@ -128,11 +161,9 @@
   </style>
 </head>
 <body>
-  <h1>📊 TikTok Video Feature Dashboard</h1>
+  <h1>📊 TikTok Health Feature Dashboard</h1>
   <div class="progress" id="progressCounter">Loading...</div>
-
   <div class="row" id="videoFeatureLayout">Loading viewer...</div>
-
   <script>
     let currentIndex = 0;
     let videoData = [];
@@ -155,52 +186,53 @@
         return;
       }
 
+      const overloadTag = (video.has_multimodal_overload === "true" || video.has_multimodal_overload === true)
+        ? '<span class="tag overload">Overload</span>'
+        : '<span class="tag no-overload">No Overload</span>';
+
+      const persuasiveTag = (video.has_persuasive === "true" || video.has_persuasive === true)
+        ? '<span class="tag overload tooltip" data-tooltip="Persuasive content includes emotional triggers, repetition, slogans, or calls to action.">Persuasive</span>'
+        : '<span class="tag no-overload tooltip" data-tooltip="Not flagged as persuasive.">Not Persuasive</span>';
+
       layout.innerHTML = `
         <div class="video-column">
           <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
-
           <div class="nav-btns">
             <button onclick="goPrev()" id="prevBtn">⬅️ Previous</button>
             <button onclick="goNext()" id="nextBtn">Next ➡️</button>
           </div>
-
-          <div class="note-section">
-            <textarea id="noteInput" placeholder="📝 Notes for this video..."></textarea>
-            <button onclick="downloadNote('${videoId}')">💾 Download Note</button>
+        </div>
+        <div class="feature-column">
+          <div class="card">
+            <h3>🕒 Temporal</h3>
+            <div class="feature-value">Scene Cuts: ${video.scene_cut_count || "0"}</div>
+            <div class="bar-container"><div class="bar-fill red" style="width: ${Math.min(parseFloat(video.scene_cut_count || 0) * 2, 100)}%"></div></div>
+            <div class="feature-value">Frame Duration Mean: ${video.frame_duration_mean || "-"} ms</div>
+          </div>
+          <div class="card">
+            <h3>🎞️ Motion</h3>
+            <div class="feature-value">Avg Motion Magnitude: ${video.avg_motion_magnitude || "0"}</div>
+            <div class="bar-container"><div class="bar-fill" style="width: ${Math.min(parseFloat(video.avg_motion_magnitude || 0) * 20, 100)}%"></div></div>
+            <div class="feature-value">Multimodal: ${overloadTag}</div>
+          </div>
+          <div class="card">
+            <h3>🧠 Persuasive Messaging</h3>
+            <div class="feature-value">${persuasiveTag}</div>
+          </div>
+          <div class="card">
+            <h3>📈 Engagement</h3>
+            <div class="feature-value">Likes: ${video.like_count || video.video_diggcount || "-"}</div>
+            <div class="feature-value">Shares: ${video.video_sharecount || "-"}</div>
+            <div class="feature-value">Comments: ${video.video_commentcount || "-"}</div>
+            <div class="feature-value">Followers: ${video.author_followercount || "-"}</div>
           </div>
         </div>
-
-        <div class="feature-column">
-          <h3>🕒 Temporal Dynamics</h3>
-          <div class="feature"><b>Timestamp:</b> ${video.video_timestamp || "-"}</div>
-          <div class="feature"><b>Duration:</b> ${video.duration_seconds_x || "-"} sec</div>
-          <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
-          <div class="feature"><b>Scene Cuts:</b> ${video.scene_cut_count || "-"}</div>
-          <div class="feature"><b>Frame Duration (mean/std/min/max):</b><br/>
-            ${video.frame_duration_mean || "-"} / ${video.frame_duration_std || "-"} / ${video.frame_duration_min || "-"} / ${video.frame_duration_max || "-"}</div>
-
-          <h3>🔊 Audio Complexity</h3>
-          <div class="feature"><b>Has Music:</b> ${video.has_music}</div>
-          <div class="feature"><b>Has Speech:</b> ${video.has_speech}</div>
-
-          <h3>🎞️ Motion Analysis</h3>
-          <div class="feature"><b>Avg Motion Magnitude:</b> ${video.avg_motion_magnitude || "-"}</div>
-
-          <h3>📈 Engagement</h3>
-          <div class="feature"><b>Likes:</b> ${video.like_count || video.video_diggcount || "-"}</div>
-          <div class="feature"><b>Shares:</b> ${video.video_sharecount || "-"}</div>
-          <div class="feature"><b>Comments:</b> ${video.video_commentcount || "-"}</div>
-          <div class="feature"><b>Followers:</b> ${video.author_followercount || "-"}</div>
-        </div>
-
-        <div class="bottom-section">
+        <div class="card" style="flex-basis: 100%">
           <h3>📄 Description</h3>
-          <div class="text-block">${video.video_description_x || "(none)"}</div>
-
+          <div>${video.video_description_x || "(none)"}</div>
           <h3>🗣️ Transcript</h3>
-          <div class="text-block">${video.whisper_voice_to_text || "(none)"}</div>
-        </div>
-      `;
+          <div style="white-space: pre-wrap; background: #edf2f7; padding: 1rem; border-radius: 5px;">${video.whisper_voice_to_text || "(none)"}</div>
+        </div>`;
 
       updateButtons();
     }
@@ -224,19 +256,8 @@
       document.getElementById("nextBtn").disabled = currentIndex === videoData.length - 1;
     }
 
-    function downloadNote(videoId) {
-      const note = document.getElementById("noteInput").value;
-      const blob = new Blob([note], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `note_${videoId}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
     window.onload = () => {
-      fetch("final_with_motion_features.csv")
+      fetch("final_with_multimodal.csv")
         .then(res => res.text())
         .then(csv => {
           Papa.parse(csv, {
