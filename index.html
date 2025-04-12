@@ -217,7 +217,7 @@
     }
 
     window.onload = () => {
-      fetch("final_with_multimodal.csv")
+      fetch("final_with_all_features.csv")
         .then(res => res.text())
         .then(csv => {
           Papa.parse(csv, {
