@@ -2,21 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TikTok Video Feature Viewer</title>
+  <title>TikTok Video Feature Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f8fb;
       padding: 2rem;
       max-width: 900px;
       margin: auto;
+      color: #2c3e50;
     }
 
     h1 {
       text-align: center;
       color: #1e3a8a;
+      margin-bottom: 2rem;
     }
 
     iframe {
@@ -24,7 +26,14 @@
       height: 600px;
       border: none;
       border-radius: 10px;
-      margin: 1rem 0;
+      margin-bottom: 1.5rem;
+    }
+
+    h3 {
+      margin-top: 1.5rem;
+      color: #1e3a8a;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.3rem;
     }
 
     .feature {
@@ -48,6 +57,7 @@
       padding: 10px 20px;
       margin: 0 10px;
       border-radius: 5px;
+      font-weight: bold;
       cursor: pointer;
     }
 
@@ -61,10 +71,22 @@
       font-weight: 600;
       margin-bottom: 1rem;
     }
+
+    .section {
+      margin-bottom: 1.5rem;
+    }
+
+    .text {
+      background: #f0f4f8;
+      padding: 0.5rem;
+      border-radius: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <h1>📊 TikTok Video Feature Viewer</h1>
+  <h1>📊 TikTok Video Feature Dashboard</h1>
   <div class="progress" id="progressCounter">Loading...</div>
   <div id="videoContainer">Preparing viewer...</div>
 
@@ -98,14 +120,42 @@
       container.innerHTML = `
         <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
 
-        <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
-        <div class="feature"><b>Duration (sec):</b> ${video.duration_seconds_x || "-"}</div>
-        <div class="feature"><b>Has Music:</b> ${video.has_music || "-"}</div>
-        <div class="feature"><b>Has Speech:</b> ${video.has_speech || "-"}</div>
-        <div class="feature"><b>Has Persuasive Language:</b> ${video.has_persuasive || "-"}</div>
-        <div class="feature"><b>Scene Cut Frequency:</b> <span class="placeholder">(to be added)</span></div>
-        <div class="feature"><b>Motion Intensity:</b> <span class="placeholder">(to be added)</span></div>
-        <div class="feature"><b>Audio Volume Range:</b> <span class="placeholder">(to be added)</span></div>
+        <div class="section">
+          <h3>🕒 Temporal Dynamics</h3>
+          <div class="feature"><b>Video Timestamp:</b> ${video.video_timestamp || "-"}</div>
+          <div class="feature"><b>Duration (sec):</b> ${video.duration_seconds_x || "-"}</div>
+          <div class="feature"><b>Frame Rate:</b> ${video.frame_rate || "-"}</div>
+          <div class="feature"><b>Location:</b> ${video.video_locationcreated || "-"}</div>
+        </div>
+
+        <div class="section">
+          <h3>🔊 Audio Complexity</h3>
+          <div class="feature"><b>Has Music:</b> ${video.has_music || "-"}</div>
+          <div class="feature"><b>Has Speech:</b> ${video.has_speech || "-"}</div>
+          <div class="feature"><b>Speech Transcript:</b></div>
+          <div class="text">${video.whisper_voice_to_text || "(none)"}</div>
+        </div>
+
+        <div class="section">
+          <h3>🎞️ Motion Analysis</h3>
+          <div class="feature"><b>Motion Vectors / Intensity:</b> <span class="placeholder">(to be added)</span></div>
+        </div>
+
+        <div class="section">
+          <h3>🧠 Persuasive Messaging</h3>
+          <div class="feature"><b>Has Persuasive Language:</b> ${video.has_persuasive || "-"}</div>
+          <div class="feature"><b>Video Description:</b></div>
+          <div class="text">${video.video_description_x || "(none)"}</div>
+        </div>
+
+        <div class="section">
+          <h3>📈 Engagement Metrics</h3>
+          <div class="feature"><b>Likes:</b> ${video.like_count || video.video_diggcount || "-"}</div>
+          <div class="feature"><b>Shares:</b> ${video.video_sharecount || "-"}</div>
+          <div class="feature"><b>Comments:</b> ${video.video_commentcount || "-"}</div>
+          <div class="feature"><b>Plays:</b> ${video.video_playcount || "-"}</div>
+          <div class="feature"><b>Followers (Author):</b> ${video.author_followercount || "-"}</div>
+        </div>
       `;
     }
 
