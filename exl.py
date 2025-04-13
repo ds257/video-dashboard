@@ -1,22 +1,24 @@
 import pandas as pd
 
-# Load the CSV
+# Load your CSV
 df = pd.read_csv("final_with_all_features.csv")
 
-# Define logic: if music_id is missing, short, or starts with a special pattern, it might be original
-def is_original(row):
-    music_id = str(row.get('music_id', '')).lower()
-    if music_id == '' or music_id == 'nan':
-        return True
-    if len(music_id) < 10:
-        return True
-    return False
+def normalize_music_id(music_id):
+    if pd.isna(music_id):
+        return ""
+    # Remove decimal point and 'E+18' if present
+    cleaned = str(music_id).split("E")[0].replace('.', '')
+    return cleaned
 
-# Apply the rule
-df['is_original_sound'] = df.apply(is_original, axis=1)
+def check_original(row):
+    video_id = str(row["video_id"])
+    music_id = normalize_music_id(row["music_id"])
+    return music_id.startswith(video_id[:7])
 
-# Save to new CSV
+# Clean and compute
+df["is_original_sound"] = df.apply(check_original, axis=1)
+
+# Save output
 df.to_csv("final_with_original_sound.csv", index=False)
-
-print("✅ Saved with `is_original_sound` column added.")
+print("✅ Saved with 'is_original_sound' added.")
 
