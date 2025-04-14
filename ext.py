@@ -14,7 +14,7 @@ df = pd.read_csv("final_with_multimodal.csv")
 def compute_audio_features(audio_path):
     try:
         if not isinstance(audio_path, str) or not os.path.exists(audio_path):
-            print(f"❌ Missing audio: {audio_path}")
+            print(f" Missing audio: {audio_path}")
             return pd.Series([np.nan] * 4)
         y, sr = librosa.load(audio_path, sr=None)
         rms = librosa.feature.rms(y=y)[0]
