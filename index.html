@@ -105,7 +105,7 @@
 <body>
   <h1>📊 TikTok Video Feature Dashboard</h1>
 
-  <input type="text" id="searchInput" placeholder="🔍 Search by author, description, or transcript..." />
+  <input type="text" id="searchInput" placeholder="🔍 Search by filename..." />
   <div class="progress" id="progressCounter">Loading...</div>
   <div class="row" id="videoFeatureLayout">Loading viewer...</div>
 
@@ -113,11 +113,10 @@
     <h3>🧠 What is Multimodal Overload?</h3>
     <p>Multimodal overload refers to the cognitive burden caused by simultaneous stimulation across multiple modalities (e.g., visuals, audio, and text).</p>
     <ul>
-      <li><b>Emoji Present:</b> Whether emojis are used in captions or on screen</li>
-      <li><b>Animated Text Present:</b> If on-screen text is detected to be moving</li>
-      <li><b>Volume Range:</b> Difference between minimum and maximum audio loudness</li>
+      <li><b>Animated Text:</b> On-screen text detected as animated</li>
+      <li><b>Emoji Count:</b> Number of emojis visible</li>
+      <li><b>Volume Range:</b> Spread in loudness of the video audio</li>
     </ul>
-    <p>A <b>composite score (0–1)</b> is computed by normalizing the above and indicating overall sensory intensity.</p>
   </div>
 
   <script>
@@ -125,28 +124,21 @@
     let filteredData = [];
     let currentIndex = 0;
 
-    function extractVideoIdFromUrl(url) {
-      const match = url.match(/\/video\/(\d+)/);
-      return match ? match[1] : null;
-    }
-
     function tf(val) {
-      return (val === "True" || val === true) ? "✔️ Yes" : "❌ No";
+      return (val === "True" || val === true || val === "TRUE" || val === "1" || val === 1) ? "✔️ Yes" : "❌ No";
     }
 
     function showVideo(index) {
       const video = filteredData[index];
       if (!video) return;
 
-      const videoId = extractVideoIdFromUrl(video.tiktokurl || "");
       const layout = document.getElementById("videoFeatureLayout");
       const progress = document.getElementById("progressCounter");
-
       progress.textContent = `Video ${index + 1} of ${filteredData.length}`;
 
       layout.innerHTML = `
         <div class="video-column">
-          <iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>
+          <p><b>🎬 Filename:</b> ${video.Filename}</p>
           <div class="nav-btns">
             <button onclick="goPrev()" id="prevBtn">⬅️ Previous</button>
             <button onclick="goNext()" id="nextBtn">Next ➡️</button>
@@ -155,58 +147,34 @@
         <div class="feature-column">
           <div class="card">
             <h3>🎞️ Temporal Dynamics</h3>
-            <div class="feature"><b>Duration:</b> ${video.duration_seconds_x || "N/A"} sec</div>
-            <div class="feature"><b>Scene Cuts:</b> ${video.scene_cut_count || "N/A"}</div>
-            <div class="feature"><b>Frame Mean:</b> ${video.frame_duration_mean || "N/A"} ms</div>
-            <div class="feature"><b>Min–Max:</b> ${video.frame_duration_min || "?"}–${video.frame_duration_max || "?"}</div>
+            <div class="feature"><b>Duration:</b> ${video["Duration (s)"] || "N/A"} sec</div>
+            <div class="feature"><b>FPS:</b> ${video.FPS || "N/A"}</div>
+            <div class="feature"><b>Frames:</b> ${video.Frames || "N/A"}</div>
+            <div class="feature"><b>Scene Cuts:</b> ${video["Scene Cuts"] || "N/A"}</div>
+            <div class="feature"><b>Mean Frame Duration:</b> ${video["Mean Frame Duration (ms)"] || "N/A"} ms</div>
+            <div class="feature"><b>Min–Std:</b> ${video["Min (ms)"] || "?"}–${video["Std (ms)"] || "?"} ms</div>
           </div>
 
           <div class="card">
             <h3>🔊 Audio Complexity</h3>
-            <div class="feature"><b>Has Music:</b> ${tf(video.has_music)}</div>
-            <div class="feature"><b>Has Speech:</b> ${tf(video.has_speech)}</div>
-            <div class="feature"><b>Original Music:</b> ${tf(video.is_original_sound)}</div>
-            <div class="feature"><b>Volume Mean:</b> ${video.volume_mean || "N/A"}</div>
-            <div class="feature"><b>Volume Std:</b> ${video.volume_std || "N/A"}</div>
-            <div class="feature"><b>Volume Range:</b> ${video.volume_min || "?"}–${video.volume_max || "?"}</div>
+            <div class="feature"><b>Input Loudness:</b> ${video["input_i (dB)"] || "N/A"} dB</div>
+            <div class="feature"><b>Loudness Range:</b> ${video["input_lra (dB)"] || "N/A"} dB</div>
+            <div class="feature"><b>Speech (Whisper):</b> ${tf(video.speech_whisper)}</div>
+            <div class="feature"><b>Speech (AST):</b> ${tf(video.speech_ast)}</div>
+            <div class="feature"><b>Speech (YAMNet):</b> ${tf(video.speech_yamnet)}</div>
+            <div class="feature"><b>Original Sound:</b> ${tf(video.original_sound)}</div>
           </div>
 
           <div class="card">
             <h3>🌀 Motion Analysis</h3>
-            <div class="feature"><b>Avg Motion Magnitude:</b> ${video.avg_motion_magnitude || "N/A"}</div>
+            <div class="feature"><b>Motion Vectors Per Frame:</b> ${video.MotionVectorsPerFrame || "N/A"}</div>
+            <div class="feature"><b>Avg Motion Intensity:</b> ${video.AvgMotionIntensityPerPixel || "N/A"}</div>
           </div>
 
           <div class="card">
             <h3>🧠 Multimodal Overload</h3>
-            <div class="feature"><b>Emoji Present:</b> ${tf(video.contains_emoji)}</div>
-            <div class="feature"><b>Animated Text Present:</b> ${tf(video.contains_text)}</div>
-            <div class="feature"><b>Multimodal Score:</b> ${video.multimodal_score || "N/A"} <small>(0–1)</small></div>
-          </div>
-
-          <div class="card">
-            <h3>📈 Engagement</h3>
-            <div class="feature"><b>Comments:</b> ${video.video_commentcount || "N/A"}</div>
-            <div class="feature"><b>Plays:</b> ${video.video_playcount || "N/A"}</div>
-            <div class="feature"><b>Followers:</b> ${video.author_followercount || "N/A"}</div>
-          </div>
-
-          <div class="card">
-            <h3>💬 Persuasive Messaging</h3>
-            <p style="font-size: 0.9rem; color: #444;">
-              <i>Persuasive = emotionally charged or action-driven language (e.g., "Act now", "Vote today") detected in transcripts or captions via keyword matching.</i>
-            </p>
-            <div class="feature"><b>Detected:</b> ${tf(video.has_persuasive)}</div>
-            <div class="feature"><b>Description:</b> ${video.video_description_x || "(none)"}</div>
-          </div>
-
-          <div class="card">
-            <h3>📄 Transcript</h3>
-            <div class="placeholder">${video.whisper_voice_to_text || "(none)"}</div>
-          </div>
-
-          <div class="card">
-            <h3>🚫 Explicit Content</h3>
-            <div class="placeholder">[To be classified using future LLM models]</div>
+            <div class="feature"><b>Animated Text:</b> ${tf(video.animated_text)}</div>
+            <div class="feature"><b>Emoji Count:</b> ${video.emoji_count || "N/A"}</div>
           </div>
         </div>
       `;
@@ -236,16 +204,14 @@
     function applySearch() {
       const query = document.getElementById("searchInput").value.toLowerCase();
       filteredData = videoData.filter(v =>
-        (v.author_name || "").toLowerCase().includes(query) ||
-        (v.video_description_x || "").toLowerCase().includes(query) ||
-        (v.whisper_voice_to_text || "").toLowerCase().includes(query)
+        (v.Filename || "").toLowerCase().includes(query)
       );
       currentIndex = 0;
       showVideo(currentIndex);
     }
 
     window.onload = () => {
-      fetch("final_with_all_features.csv")
+      fetch("final_combined_features.csv")
         .then(res => res.text())
         .then(csv => {
           Papa.parse(csv, {
